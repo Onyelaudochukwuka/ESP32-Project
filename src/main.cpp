@@ -6,10 +6,6 @@
 #include <Adafruit_NeoPixel.h>
 #include "RTClib.h"
 
-#ifndef PSTR
- #define PSTR // Make Arduino Due happy
-#endif
-
 #define PIN 2
 RTC_DS1307 rtc;
 
@@ -57,12 +53,11 @@ void setup() {
     Serial.flush();
     while (1) delay(10);
   }
-
   if (! rtc.isrunning()) {
     Serial.println("RTC is NOT running, let's set the time!");
     // When time needs to be set on a new device, or after a power loss, the
     // following line sets the RTC to the date & time this sketch was compiled
-    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+      rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
     // This line sets the RTC with an explicit date & time, for example to set
     // January 21, 2014 at 3am you would call:
     // rtc.adjust(DateTime(2014, 1, 21, 3, 0, 0));
@@ -76,7 +71,8 @@ void loop() {
   DateTime now = rtc.now();
   matrix.fillScreen(5);
   matrix.setCursor(x, 0);
-  matrix.print(F(now.hour() + ":"+ now.minute() + ":" + now.second() + daysOfTheWeek[now.dayOfTheWeek()] + "," + now.day() + "/" + now.month() + "/" + now.year()));
+  char buf3[] = "Today is DDD, MMM DD YYYY";
+  matrix.print(F(now.toString(buf3)));
   Serial.println(x);
   if(--x < -60) {
     x = matrix.width();
