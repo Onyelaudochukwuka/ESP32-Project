@@ -3,7 +3,7 @@
   <style>
     h1 { font-size: 2.0rem; color:#2980b9;}
 
-    input[type=text], select {
+    input, select {
       width: 100%;
       padding: 8px 8px;
       margin: 8px 0;
@@ -50,7 +50,7 @@
   
   <body>
     <div style="text-align: center;">
-      <h1>ESP32 P10 Module Web Server</h1>
+      <h1>ESP32 L.E.D Module Web Server</h1>
     </div>
 
     <div class="div_Form">
@@ -66,8 +66,11 @@
         
         <label for="SingleRow_TXT">Text :</label>
         <input type="text" id="SingleRow_TXT" name="SingleRow_TXT" placeholder="Enter text here...">
+
+        <label for="SingleRow_INCSPD">Increase Speed :</label>
+        <input type="number" id="SingleRow_INCSPD" name="SingleRow_INCSPD" placeholder="Configure display Speed">
         
-        
+        <br>
         <button type="button" class="buttonON" id="BTN_Submit" onclick="BTN_Submit_Click()">Submit</button>
         <label style="padding: 15px; color: black;" id="LBL_Info"></label>
       </form>
@@ -86,7 +89,8 @@
         document.getElementById("LBL_Info").style.color = "black";
         document.getElementById("LBL_Info").innerHTML = "Please wait...";
           var SR_TXT = document.getElementById("SingleRow_TXT").value;
-          var msg = key_TXT + ",SR," + SR_TXT;
+          var INC_SPD = document.getElementById("SingleRow_INCSPD").value;
+          var msg = key_TXT + ",SR," + SR_TXT + "," + INC_SPD;
           Send(msg);
       }
       

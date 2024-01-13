@@ -1,6 +1,5 @@
 #include <WiFi.h>
 #include <WebServer.h>
-#include <DMD32.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_NeoMatrix.h>
 #include <Adafruit_NeoPixel.h>
@@ -11,7 +10,7 @@
 // You can change it to another word.
 #define key_Txt "p10esp32wb"
 #define PIN 2
-Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(64, 8, PIN,
+Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(32, 16, PIN,
   NEO_MATRIX_TOP     + NEO_MATRIX_LEFT +
   NEO_MATRIX_COLUMNS + NEO_MATRIX_ZIGZAG,
   NEO_GRB            + NEO_KHZ800);
@@ -26,7 +25,7 @@ const char MAIN_page[] PROGMEM = R"=====(
   <style>
     h1 { font-size: 2.0rem; color:#2980b9;}
 
-    input[type=text], select {
+    input, select {
       width: 100%;
       padding: 8px 8px;
       margin: 8px 0;
@@ -73,7 +72,7 @@ const char MAIN_page[] PROGMEM = R"=====(
   
   <body>
     <div style="text-align: center;">
-      <h1>ESP32 P10 Module Web Server</h1>
+      <h1>ESP32 L.E.D Module Web Server</h1>
     </div>
 
     <div class="div_Form">
@@ -89,8 +88,11 @@ const char MAIN_page[] PROGMEM = R"=====(
         
         <label for="SingleRow_TXT">Text :</label>
         <input type="text" id="SingleRow_TXT" name="SingleRow_TXT" placeholder="Enter text here...">
+
+        <label for="SingleRow_INCSPD">Increase Speed :</label>
+        <input type="number" id="SingleRow_INCSPD" name="SingleRow_INCSPD" placeholder="Configure display Speed">
         
-        
+        <br>
         <button type="button" class="buttonON" id="BTN_Submit" onclick="BTN_Submit_Click()">Submit</button>
         <label style="padding: 15px; color: black;" id="LBL_Info"></label>
       </form>
@@ -109,7 +111,8 @@ const char MAIN_page[] PROGMEM = R"=====(
         document.getElementById("LBL_Info").style.color = "black";
         document.getElementById("LBL_Info").innerHTML = "Please wait...";
           var SR_TXT = document.getElementById("SingleRow_TXT").value;
-          var msg = key_TXT + ",SR," + SR_TXT;
+          var INC_SPD = document.getElementById("SingleRow_INCSPD").value;
+          var msg = key_TXT + ",SR," + SR_TXT + "," + INC_SPD;
           Send(msg);
       }
       
@@ -154,6 +157,7 @@ const char* password = "6D862X8635";
 
 String display_Modes = "";
 String single_Row_Txt = "";
+int INC_SPD = 50;
 
 // Server on port 80.
 WebServer server(80);  
@@ -197,7 +201,6 @@ void handleSettings() {
 
   if (getValue(incoming_Settings, ',', 0) == key_Txt) {
       single_Row_Txt = getValue(incoming_Settings, ',', 2);
-      Serial.println(single_Row_Txt);
       delay(500);
 
     server.send(200, "text/plane", "+OK");  //--> Sending replies to the client.
