@@ -7,20 +7,37 @@
 #include <Preferences.h>
 #include <Wire.h>
 #include <RTClib.h>
+#include <Adafruit_Sensor.h>
+#include <DHT.h>
+#include <DHT_U.h>
+
+#define DHTPIN 2     // Digital pin connected to the DHT sensor 
+// Feather HUZZAH ESP8266 note: use pins 3, 4, 5, 12, 13 or 14 --
+// Pin 15 can work but DHT must be disconnected during program upload.
+
+// Uncomment the type of sensor in use:
+#define DHTTYPE    DHT11     // DHT 11
+// #define DHTTYPE    DHT22     // DHT 22 (AM2302)
+//#define DHTTYPE    DHT21     // DHT 21 (AM2301)
+
+// See guide for details on sensor wiring and usage:
+//   https://learn.adafruit.com/dht/overview
+
+DHT_Unified dht(DHTPIN, DHTTYPE);
+
 
 RTC_DS1307 rtc;
-//----------------------------------------
 
-//----------------------------------------Defining the key.
-// "Key" functions like a password. In order to change the text on the P10, the user must know the "key".
-// You can change it to another word.
-#define key_Txt "p10esp32wb"
 #define PIN 2
 Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(32, 16, PIN,
   NEO_MATRIX_TOP     + NEO_MATRIX_LEFT +
   NEO_MATRIX_COLUMNS + NEO_MATRIX_ZIGZAG,
   NEO_GRB            + NEO_KHZ800);
 Preferences prefs;
+
+uint32_t delayMS;
+
+
 const uint16_t colors[] = {
   matrix.Color(255, 255, 255),matrix.Color(214, 103, 93), matrix.Color(255, 0, 255) };
 
@@ -33,7 +50,7 @@ const char MAIN_page[] PROGMEM = R"=====(
     <meta name='viewport' content='width=device-width, initial-scale=1.0' />
     <title>Document</title>
     <style>
-      /*! tailwindcss v3.4.1 | MIT License | https://tailwindcss.com*/*,:after,:before{box-sizing:border-box;border:0 solid #e5e7eb}:after,:before{--tw-content:""}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;-o-tab-size:4;tab-size:4;font-family:ui-sans-serif,system-ui,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color Emoji;font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,Liberation Mono,Courier New,monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:initial}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}[type=button],[type=reset],[type=submit],button{-webkit-appearance:button;background-color:initial;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:initial}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0}fieldset,legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::-moz-placeholder,textarea::-moz-placeholder{opacity:1;color:#9ca3af}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]{display:none}*,::backdrop,:after,:before{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:#3b82f680;--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: }.container{width:100%}@media (min-width:640px){.container{max-width:640px}}@media (min-width:768px){.container{max-width:768px}}@media (min-width:1024px){.container{max-width:1024px}}@media (min-width:1280px){.container{max-width:1280px}}@media (min-width:1536px){.container{max-width:1536px}}.fixed{position:fixed}.absolute{position:absolute}.relative{position:relative}.inset-0{inset:0}.mx-auto{margin-left:auto;margin-right:auto}.mt-10{margin-top:2.5rem}.mt-48{margin-top:12rem}.mt-6{margin-top:1.5rem}.mt-8{margin-top:2rem}.block{display:block}.flex{display:flex}.table{display:table}.hidden{display:none}.h-10{height:2.5rem}.h-20{height:5rem}.h-full{height:100%}.h-screen{height:100vh}.min-h-24{min-height:6rem}.w-20{width:5rem}.w-9{width:2.25rem}.w-full{width:100%}.basis-5{flex-basis:1.25rem}.basis-5\/12{flex-basis:41.666667%}.transform{transform:translate(var(--tw-translate-x),var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.cursor-pointer{cursor:pointer}.resize{resize:both}.flex-wrap{flex-wrap:wrap}.items-center{align-items:center}.justify-center{justify-content:center}.gap-8{gap:2rem}.space-x-4>:not([hidden])~:not([hidden]){--tw-space-x-reverse:0;margin-right:calc(1rem*var(--tw-space-x-reverse));margin-left:calc(1rem*(1 - var(--tw-space-x-reverse)))}.space-y-4>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1rem*var(--tw-space-y-reverse))}.space-y-6>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1.5rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1.5rem*var(--tw-space-y-reverse))}.rounded-lg{border-radius:.5rem}.rounded-xl{border-radius:.75rem}.border{border-width:1px}.border-gray-500{--tw-border-opacity:1;border-color:rgb(107 114 128/var(--tw-border-opacity))}.border-zinc-200{--tw-border-opacity:1;border-color:rgb(228 228 231/var(--tw-border-opacity))}.bg-black{--tw-bg-opacity:1;background-color:rgb(0 0 0/var(--tw-bg-opacity))}.bg-blue-700{--tw-bg-opacity:1;background-color:rgb(29 78 216/var(--tw-bg-opacity))}.bg-gray-500\/50{background-color:#6b728080}.bg-white{--tw-bg-opacity:1;background-color:rgb(255 255 255/var(--tw-bg-opacity))}.p-4{padding:1rem}.p-6{padding:1.5rem}.px-3{padding-left:.75rem;padding-right:.75rem}.py-2{padding-top:.5rem;padding-bottom:.5rem}.py-6{padding-top:1.5rem;padding-bottom:1.5rem}.text-2xl{font-size:1.5rem;line-height:2rem}.font-bold{font-weight:700}.font-medium{font-weight:500}.text-black{--tw-text-opacity:1;color:rgb(0 0 0/var(--tw-text-opacity))}.text-white{--tw-text-opacity:1;color:rgb(255 255 255/var(--tw-text-opacity))}.opacity-0{opacity:0}.opacity-100{opacity:1}.opacity-25{opacity:.25}.opacity-50{opacity:.5}.opacity-75{opacity:.75}.outline{outline-style:solid}.ring-offset-white{--tw-ring-offset-color:#fff}.transition{transition-property:color,background-color,border-color,text-decoration-color,fill,stroke,opacity,box-shadow,transform,filter,-webkit-backdrop-filter;transition-property:color,background-color,border-color,text-decoration-color,fill,stroke,opacity,box-shadow,transform,filter,backdrop-filter;transition-property:color,background-color,border-color,text-decoration-color,fill,stroke,opacity,box-shadow,transform,filter,backdrop-filter,-webkit-backdrop-filter;transition-timing-function:cubic-bezier(.4,0,.2,1);transition-duration:.15s}.transition-all{transition-property:all;transition-timing-function:cubic-bezier(.4,0,.2,1);transition-duration:.15s}.duration-500{transition-duration:.5s}.ease-in{transition-timing-function:cubic-bezier(.4,0,1,1)}.toggle,.toggle label{position:relative}.toggle label{display:inline-block;width:80px;height:80px;background-color:#fd1015;border-radius:50px;cursor:pointer;box-shadow:inset 0 0 2px 1px #0000001a,0 9px 15px 0 #ef4247;-webkit-tap-highlight-color:transparent}.toggle label:before{content:"";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);transition:width .2s cubic-bezier(0,-1.85,.27,1.75);height:42px;width:42px;background-color:#fd0f14;border-radius:46px;box-shadow:inset 0 0 0 8px #fff}.toggle input{display:none}.toggle input:checked+label{background-color:#57de72;box-shadow:inset 0 0 2px 1px #0000001a,0 9px 15px 0 rgba(3,132,28,.541)}.toggle input:checked+label:before{width:10px;background-color:#fff}.on .toggle:after{color:#fff}.on .wrapper{background-color:#57de72}.wrapper{background-color:#fd1015}body{background-color:#f0f7ef}.container{display:flex;width:500px;height:500px;margin:auto;text-alignt:center}.slider{width:100%}input[type=range]{-webkit-appearance:none!important;width:100%;height:15px;border-radius:9999px;border-width:2px;--tw-border-opacity:1;border-color:rgb(156 163 175/var(--tw-border-opacity));--tw-bg-opacity:1;background-color:rgb(156 163 175/var(--tw-bg-opacity));margin:auto;transition:all .3s ease}input[type=range]:hover{--tw-bg-opacity:1;background-color:rgb(209 213 219/var(--tw-bg-opacity))}input[type=range]::-webkit-slider-thumb{-webkit-appearance:none!important;width:35px;height:20px;background-color:#fff;border-radius:30px;box-shadow:0 0 3px #fff;-webkit-transition:all .5s ease;transition:all .5s ease}input[type=range]::-webkit-slider-thumb:hover{--tw-bg-opacity:1;background-color:rgb(209 213 219/var(--tw-bg-opacity))}input[type=range]::-webkit-slider-thumb:active{box-shadow:0 0 1px #d1d5db}#rangevalue{text-align:center;font-family:Quantico,sans-serif;font-size:18px;display:block;margin:auto;padding:10px 0;width:100%;color:#579e81}.file\:border-0::file-selector-button{border-width:0}.file\:bg-transparent::file-selector-button{background-color:initial}.file\:text-sm::file-selector-button{font-size:.875rem;line-height:1.25rem}.file\:font-medium::file-selector-button{font-weight:500}.placeholder\:font-normal::-moz-placeholder{font-weight:400}.placeholder\:font-normal::placeholder{font-weight:400}.focus\:shadow-\[0px_0px_0px_4px_\#C9DDFE\2c 0px_1px_2px_0px_\#C9DDFE0C\]:focus{--tw-shadow:0px 0px 0px 4px #c9ddfe,0px 1px 2px 0px #c9ddfe0c;--tw-shadow-colored:0px 0px 0px 4px var(--tw-shadow-color),0px 1px 2px 0px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow,0 0 #0000),var(--tw-ring-shadow,0 0 #0000),var(--tw-shadow)}.focus\:outline-0:focus{outline-width:0}.disabled\:cursor-not-allowed:disabled{cursor:not-allowed}.disabled\:bg-gray-100:disabled{--tw-bg-opacity:1;background-color:rgb(243 244 246/var(--tw-bg-opacity))}@media (min-width:1024px){.lg\:mt-0{margin-top:0}.lg\:mt-8{margin-top:2rem}.lg\:w-9\/12{width:75%}.lg\:basis-5\/12{flex-basis:41.666667%}.lg\:space-y-0>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0px*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0px*var(--tw-space-y-reverse))}}
+      /*! tailwindcss v3.4.1 | MIT License | https://tailwindcss.com*/*,:after,:before{box-sizing:border-box;border:0 solid #e5e7eb}:after,:before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;-o-tab-size:4;tab-size:4;font-family:ui-sans-serif,system-ui,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color Emoji;font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,Liberation Mono,Courier New,monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:initial}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}[type=button],[type=reset],[type=submit],button{-webkit-appearance:button;background-color:initial;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:initial}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0}fieldset,legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::-moz-placeholder,textarea::-moz-placeholder{opacity:1;color:#9ca3af}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]{display:none}*,::backdrop,:after,:before{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:#3b82f680;--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: }.container{width:100%}@media (min-width:640px){.container{max-width:640px}}@media (min-width:768px){.container{max-width:768px}}@media (min-width:1024px){.container{max-width:1024px}}@media (min-width:1280px){.container{max-width:1280px}}@media (min-width:1536px){.container{max-width:1536px}}.fixed{position:fixed}.absolute{position:absolute}.relative{position:relative}.inset-0{inset:0}.mx-auto{margin-left:auto;margin-right:auto}.mt-10{margin-top:2.5rem}.mt-48{margin-top:12rem}.mt-6{margin-top:1.5rem}.mt-8{margin-top:2rem}.block{display:block}.flex{display:flex}.table{display:table}.hidden{display:none}.h-10{height:2.5rem}.h-20{height:5rem}.h-full{height:100%}.h-screen{height:100vh}.min-h-24{min-height:6rem}.w-20{width:5rem}.w-9{width:2.25rem}.w-full{width:100%}.basis-5{flex-basis:1.25rem}.basis-5\/12{flex-basis:41.666667%}.transform{transform:translate(var(--tw-translate-x),var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.cursor-pointer{cursor:pointer}.resize{resize:both}.flex-wrap{flex-wrap:wrap}.items-center{align-items:center}.justify-center{justify-content:center}.gap-8{gap:2rem}.space-x-4>:not([hidden])~:not([hidden]){--tw-space-x-reverse:0;margin-right:calc(1rem*var(--tw-space-x-reverse));margin-left:calc(1rem*(1 - var(--tw-space-x-reverse)))}.space-y-4>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1rem*var(--tw-space-y-reverse))}.space-y-6>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1.5rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1.5rem*var(--tw-space-y-reverse))}.rounded-lg{border-radius:.5rem}.rounded-xl{border-radius:.75rem}.border{border-width:1px}.border-gray-500{--tw-border-opacity:1;border-color:rgb(107 114 128/var(--tw-border-opacity))}.border-zinc-200{--tw-border-opacity:1;border-color:rgb(228 228 231/var(--tw-border-opacity))}.bg-black{--tw-bg-opacity:1;background-color:rgb(0 0 0/var(--tw-bg-opacity))}.bg-blue-700{--tw-bg-opacity:1;background-color:rgb(29 78 216/var(--tw-bg-opacity))}.bg-gray-500\/50{background-color:#6b728080}.bg-white{--tw-bg-opacity:1;background-color:rgb(255 255 255/var(--tw-bg-opacity))}.p-4{padding:1rem}.p-6{padding:1.5rem}.px-3{padding-left:.75rem;padding-right:.75rem}.py-2{padding-top:.5rem;padding-bottom:.5rem}.py-6{padding-top:1.5rem;padding-bottom:1.5rem}.text-2xl{font-size:1.5rem;line-height:2rem}.font-bold{font-weight:700}.font-medium{font-weight:500}.text-black{--tw-text-opacity:1;color:rgb(0 0 0/var(--tw-text-opacity))}.text-white{--tw-text-opacity:1;color:rgb(255 255 255/var(--tw-text-opacity))}.opacity-0{opacity:0}.opacity-100{opacity:1}.opacity-25{opacity:.25}.opacity-50{opacity:.5}.opacity-75{opacity:.75}.outline{outline-style:solid}.ring-offset-white{--tw-ring-offset-color:#fff}.transition{transition-property:color,background-color,border-color,text-decoration-color,fill,stroke,opacity,box-shadow,transform,filter,-webkit-backdrop-filter;transition-property:color,background-color,border-color,text-decoration-color,fill,stroke,opacity,box-shadow,transform,filter,backdrop-filter;transition-property:color,background-color,border-color,text-decoration-color,fill,stroke,opacity,box-shadow,transform,filter,backdrop-filter,-webkit-backdrop-filter;transition-timing-function:cubic-bezier(.4,0,.2,1);transition-duration:.15s}.transition-all{transition-property:all;transition-timing-function:cubic-bezier(.4,0,.2,1);transition-duration:.15s}.duration-500{transition-duration:.5s}.ease-in{transition-timing-function:cubic-bezier(.4,0,1,1)}.toggle,.toggle label{position:relative}.toggle label{display:inline-block;width:80px;height:80px;background-color:#fd1015;border-radius:50px;cursor:pointer;box-shadow:inset 0 0 2px 1px #0000001a,0 9px 15px 0 #ef4247;-webkit-tap-highlight-color:transparent}.toggle label:before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);transition:width .2s cubic-bezier(0,-1.85,.27,1.75);height:42px;width:42px;background-color:#fd0f14;border-radius:46px;box-shadow:inset 0 0 0 8px #fff}.toggle input{display:none}.toggle input:checked+label{background-color:#57de72;box-shadow:inset 0 0 2px 1px #0000001a,0 9px 15px 0 rgba(3,132,28,.541)}.toggle input:checked+label:before{width:10px;background-color:#fff}.on .toggle:after{color:#fff}.on .wrapper{background-color:#57de72}.wrapper{background-color:#fd1015}body{background-color:#f0f7ef}.container{display:flex;width:500px;height:500px;margin:auto;text-alignt:center}.slider{width:100%}input[type=range]{-webkit-appearance:none!important;width:100%;height:15px;border-radius:9999px;border-width:2px;--tw-border-opacity:1;border-color:rgb(156 163 175/var(--tw-border-opacity));--tw-bg-opacity:1;background-color:rgb(156 163 175/var(--tw-bg-opacity));margin:auto;transition:all .3s ease}input[type=range]:hover{--tw-bg-opacity:1;background-color:rgb(209 213 219/var(--tw-bg-opacity))}input[type=range]::-webkit-slider-thumb{-webkit-appearance:none!important;width:35px;height:20px;background-color:#fff;border-radius:30px;box-shadow:0 0 3px #fff;-webkit-transition:all .5s ease;transition:all .5s ease}input[type=range]::-webkit-slider-thumb:hover{--tw-bg-opacity:1;background-color:rgb(209 213 219/var(--tw-bg-opacity))}input[type=range]::-webkit-slider-thumb:active{box-shadow:0 0 1px #d1d5db}#rangevalue{text-align:center;font-family:Quantico,sans-serif;font-size:18px;display:block;margin:auto;padding:10px 0;width:100%;color:#579e81}.file\:border-0::file-selector-button{border-width:0}.file\:bg-transparent::file-selector-button{background-color:initial}.file\:text-sm::file-selector-button{font-size:.875rem;line-height:1.25rem}.file\:font-medium::file-selector-button{font-weight:500}.placeholder\:font-normal::-moz-placeholder{font-weight:400}.placeholder\:font-normal::placeholder{font-weight:400}.focus\:shadow-\[0px_0px_0px_4px_\#C9DDFE\2c 0px_1px_2px_0px_\#C9DDFE0C\]:focus{--tw-shadow:0px 0px 0px 4px #c9ddfe,0px 1px 2px 0px #c9ddfe0c;--tw-shadow-colored:0px 0px 0px 4px var(--tw-shadow-color),0px 1px 2px 0px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow,0 0 #0000),var(--tw-ring-shadow,0 0 #0000),var(--tw-shadow)}.focus\:outline-0:focus{outline-width:0}.disabled\:cursor-not-allowed:disabled{cursor:not-allowed}.disabled\:bg-gray-100:disabled{--tw-bg-opacity:1;background-color:rgb(243 244 246/var(--tw-bg-opacity))}@media (min-width:1024px){.lg\:mt-0{margin-top:0}.lg\:mt-8{margin-top:2rem}.lg\:w-9\/12{width:75%}.lg\:basis-5\/12{flex-basis:41.666667%}.lg\:space-y-0>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0px*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0px*var(--tw-space-y-reverse))}}
     </style>
   </head>
   <body
@@ -195,7 +212,7 @@ const char MAIN_page[] PROGMEM = R"=====(
       </button>
     </main>
     <script>
-      let color ="#ffffff"; //done
+      let color ='#ffffff'; //done
       let mode = 0; // done
       let brightness = 0.25; // done
       let state; // done
@@ -228,9 +245,17 @@ const char MAIN_page[] PROGMEM = R"=====(
               />
             </svg>
             `;
+            const iconTemperature = `
+            <svg class='w-20 h-20' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'>
+    <g>
+        <path fill='none' d='M0 0h24v24H0z'/>
+        <path d='M4.5 10a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7zm0-2a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM22 10h-2a4 4 0 1 0-8 0v5a4 4 0 1 0 8 0h2a6 6 0 1 1-12 0v-5a6 6 0 1 1 12 0z'/>
+    </g>
+</svg>`
       const MODES = [
         'TIME', 
-        'MESSAGE'
+        'TEMPERATURE',
+        'MESSAGE',
       ];
       function hexToRGBA(hex) {
         if(hex){
@@ -270,16 +295,16 @@ const char MAIN_page[] PROGMEM = R"=====(
           });
       }
       function rgbaToHex(rgba) {
-    let parts = rgba.substring(rgba.indexOf("(")).split(",");
+    let parts = rgba.substring(rgba.indexOf('(')).split(',');
     let r = parseInt(parts[0].substring(1)).toString(16),
         g = parseInt(parts[1]).toString(16),
         b = parseInt(parts[2]).toString(16);
 
-    if (r.length == 1) r = "0" + r;
-    if (g.length == 1) g = "0" + g;
-    if (b.length == 1) b = "0" + b;
+    if (r.length == 1) r = '0' + r;
+    if (g.length == 1) g = '0' + g;
+    if (b.length == 1) b = '0' + b;
 
-    return "#" + r + g + b;
+    return '#' + r + g + b;
 }
       function handleOnLoad(){
         fetch('/getConfig')
@@ -327,10 +352,10 @@ const char MAIN_page[] PROGMEM = R"=====(
             ledBrightness.classList.remove('opacity-75');
             ledBrightness.classList.add('opacity-100');
           }
-          color = rgbaToHex('(' + calledColor.replaceAll('|', ',') + ')');
-          ledColorIcon.style.fill = rgbaToHex('(' + calledColor.replaceAll('|', ',') + ')');
-          ledColor.value = rgbaToHex('(' + calledColor.replaceAll('/', ',') + ')');
-          messageInput.value = message.replaceAll('|', ',');
+          color = rgbaToHex('(' + calledColor?.replaceAll('|', ',') + ')');
+          ledColorIcon.style.fill = rgbaToHex('(' + calledColor?.replaceAll('|', ',') + ')');
+          ledColor.value = rgbaToHex('(' + calledColor?.replaceAll('/', ',') + ')');
+          messageInput.value = message?.replaceAll('|', ',');
           speedControl.value = speed;
         })
       }
@@ -343,7 +368,10 @@ const char MAIN_page[] PROGMEM = R"=====(
         mode = modeIndex;
         if (modeIndex === 0) {
           modSwitch.innerHTML = iconTime;
-        } else {
+        } else if (modeIndex === 1){
+          modSwitch.innerHTML = iconTemperature;
+        }
+         else {
           modSwitch.innerHTML = iconText;
         }
       });
@@ -379,7 +407,7 @@ const char MAIN_page[] PROGMEM = R"=====(
         document.body.classList.toggle('on');
       };
       window.addEventListener('load', () => {
-        handleOnLoad()
+        handleOnLoad();
       });
       toggle.addEventListener(
         'click',
@@ -540,39 +568,36 @@ void handleGetConfig(){
 //________________________________________________________________________________
 
 void setup(void){
-//   // put your setup code here, to run once:
-
-// IPAddress local_ip(192,168,1,1);
-// IPAddress gateway(192,168,1,1);
-// IPAddress subnet(255,255,255,0);
-// //----------------------------------------
-
-// //----------------------------------------Create ESP32 as Access Point.
-// Serial.println();
-// Serial.println("WIFI mode : AP");
-// WiFi.mode(WIFI_AP);
-// Serial.println("Setting up ESP32 to be an Access Point.");
-// WiFi.softAP(IP_ssid, IP_password); //--> Creating Access Points
-// delay(1000);
-// Serial.println("Setting up ESP32 softAPConfig.");
-// WiFi.softAPConfig(local_ip, gateway, subnet);
-// //----------------------------------------
-
-// Serial.println();
-// Serial.println("SSID name : ");
-// Serial.println(ssid);
-// Serial.println("IP address : ");
-// Serial.println(WiFi.softAPIP());
-// Serial.println();
-// Serial.println("Connect your computer or mobile Wifi to the SSID above.");
-// Serial.println("Visit the IP Address above in your browser to open the main page.");
-// Serial.println();
-// delay(500);
    Serial.begin(115200);
   prefs.begin("my-app", false);
   delay(1000);
-  Serial.println();
-  delay(500);
+    dht.begin();
+  Serial.println(F("DHTxx Unified Sensor Example"));
+  // Print temperature sensor details.
+  sensor_t sensor;
+  dht.temperature().getSensor(&sensor);
+    Serial.println(F("------------------------------------"));
+  Serial.println(F("Temperature Sensor"));
+  Serial.print  (F("Sensor Type: ")); Serial.println(sensor.name);
+  Serial.print  (F("Driver Ver:  ")); Serial.println(sensor.version);
+  Serial.print  (F("Unique ID:   ")); Serial.println(sensor.sensor_id);
+  Serial.print  (F("Max Value:   ")); Serial.print(sensor.max_value); Serial.println(F("°C"));
+  Serial.print  (F("Min Value:   ")); Serial.print(sensor.min_value); Serial.println(F("°C"));
+  Serial.print  (F("Resolution:  ")); Serial.print(sensor.resolution); Serial.println(F("°C"));
+  Serial.println(F("------------------------------------"));
+  // Print humidity sensor details.
+
+  dht.humidity().getSensor(&sensor);
+    Serial.println(F("Humidity Sensor"));
+  Serial.print  (F("Sensor Type: ")); Serial.println(sensor.name);
+  Serial.print  (F("Driver Ver:  ")); Serial.println(sensor.version);
+  Serial.print  (F("Unique ID:   ")); Serial.println(sensor.sensor_id);
+  Serial.print  (F("Max Value:   ")); Serial.print(sensor.max_value); Serial.println(F("%"));
+  Serial.print  (F("Min Value:   ")); Serial.print(sensor.min_value); Serial.println(F("%"));
+  Serial.print  (F("Resolution:  ")); Serial.print(sensor.resolution); Serial.println(F("%"));
+  Serial.println(F("------------------------------------"));
+  // Set delay between sensor readings based on sensor details.
+  delayMS = sensor.min_delay / 1000;
 
 if (! rtc.begin()) {
     Serial.println("Couldn't find RTC");
@@ -645,9 +670,25 @@ void handleLed(){
     matrix.setCursor(x, 0);
     String message = replaceString(prefs.getString("message"), '|', ',');
     int condition = -(message.length() * 6 + matrix.width());
-    if(prefs.getInt("mode") == 1){
+    if(prefs.getInt("mode") == 2){
     matrix.print(F(message.c_str()));
-    }else{
+    }
+    if(prefs.getInt("mode") == 1){
+      delay(delayMS);
+      sensors_event_t event;
+      dht.humidity().getEvent(&event);
+      dht.temperature().getEvent(&event);
+      Serial.print(F("Humidity: "));
+    Serial.print(event.relative_humidity);
+    Serial.println(F("%"));
+    Serial.print(F("Temperature: "));
+    Serial.print(event.temperature);
+    Serial.println(F("°C"));
+      String temp = String(event.temperature)+"°C"+String(event.relative_humidity)+"%";
+      // Get temperature event and print its value.
+      matrix.print(F(temp.c_str()));
+    }
+    else{
       DateTime now = rtc.now();
         String line =
      String(now.year())+"-"+
