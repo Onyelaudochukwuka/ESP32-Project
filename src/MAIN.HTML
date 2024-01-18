@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+  <style>
+    h1 { font-size: 2.0rem; color:#2980b9;}
+
+    input, select {
+      width: 100%;
+      padding: 8px 8px;
+      margin: 8px 0;
+      display: inline-block;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+
+    .div_Form {
+      margin: auto;
+      width: 70%;
+      border-radius: 5px;
+      background-color: #f2f2f2;
+      padding: 10px 10px;
+    }
+
+    .buttonON {
+      display: inline-block;
+      padding: 5px 25px;
+      font-size: 13px;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      outline: none;
+      color: #fff;
+      background-color: #4CAF50;
+      border: none;
+      border-radius: 8px;
+      box-shadow: 0 3px #999;
+    }
+    .buttonON:hover {background-color: #3e8e41}
+    .buttonON:active {
+      background-color: #3e8e41;
+      box-shadow: 0 1px #666;
+      transform: translateY(2px);
+    }
+    .buttonON:disabled {
+      background-color: #666;
+      box-shadow: 0 1px #666;
+      transform: translateY(2px);
+    }
+  </style>
+  
+  <body>
+    <div style="text-align: center;">
+      <h1>ESP32 L.E.D Module Web Server</h1>
+    </div>
+
+    <div class="div_Form">
+      <form>
+        <label for="Keys_TXT">Key :</label>
+        <input type="password" id="Keys_TXT" name="Keys_TXT" placeholder="Enter key here...">
+        
+        <br>
+        <hr style="border: 1px solid #e6e6e6;">
+        
+        <input type="checkbox" id="cb_SingleRow" name="cb_SingleRow" value="" onclick="CB_SR_Click()">
+        <label for="cb_SingleRow"> Single Row</label><br><br>
+        
+        <label for="SingleRow_TXT">Text :</label>
+        <input type="text" id="SingleRow_TXT" name="SingleRow_TXT" placeholder="Enter text here...">
+
+        <label for="SingleRow_INCSPD">Increase Speed :</label>
+        <input type="number" id="SingleRow_INCSPD" name="SingleRow_INCSPD" placeholder="Configure display Speed">
+        
+        <br>
+        <button type="button" class="buttonON" id="BTN_Submit" onclick="BTN_Submit_Click()">Submit</button>
+        <label style="padding: 15px; color: black;" id="LBL_Info"></label>
+      </form>
+    </div>
+
+    <script>
+      function BTN_Submit_Click() {
+        var checkBox_SR = document.getElementById("cb_SingleRow");
+        var key_TXT = document.getElementById("Keys_TXT").value;
+        if (key_TXT == "") {
+          alert("Error ! \rThe key cannot be empty.");
+          return;
+        }
+
+        document.getElementById("BTN_Submit").disabled = true;
+        document.getElementById("LBL_Info").style.color = "black";
+        document.getElementById("LBL_Info").innerHTML = "Please wait...";
+          var SR_TXT = document.getElementById("SingleRow_TXT").value;
+          var INC_SPD = document.getElementById("SingleRow_INCSPD").value;
+          var msg = key_TXT + ",SR," + SR_TXT + "," + INC_SPD;
+          Send(msg);
+      }
+      
+      function Send(x) {
+        //alert(x);
+        if (window.XMLHttpRequest) {
+          // code for IE7+, Firefox, Chrome, Opera, Safari
+          xmlhttp = new XMLHttpRequest();
+        } else {
+          // code for IE6, IE5
+          xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+        }
+        xmlhttp.onreadystatechange = function() {
+          if (this.readyState == 4 && this.status == 200) {
+            if (this.responseText == "+OK") {
+              document.getElementById("BTN_Submit").disabled = false;
+              document.getElementById("LBL_Info").innerHTML = "";
+            }
+            if (this.responseText == "+ERR") {
+              document.getElementById("BTN_Submit").disabled = false;
+              document.getElementById("LBL_Info").innerHTML = "Keys are wrong !";
+              document.getElementById("LBL_Info").style.color = "red";
+            }
+          }
+        }
+        xmlhttp.open("GET","setText?Settings="+x,true);
+        xmlhttp.send();
+      }
+    </script>
+  </body>
+</html>
